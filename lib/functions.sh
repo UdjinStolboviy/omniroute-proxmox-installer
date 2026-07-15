@@ -22,28 +22,39 @@ log_to_file() {
 # Generate cryptographically secure base64 secret
 generate_secret_base64() {
   local length=${1:-48}
+  local secret
+  set +o pipefail
   if command -v openssl >/dev/null 2>&1; then
-    openssl rand -base64 "$length" | tr -d '\n\r'
+    secret=$(openssl rand -base64 "$length" | tr -d '\n\r')
   else
-    tr -dc 'A-Za-z0-9' < /dev/urandom | head -c "$length"
+    secret=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c "$length")
   fi
+  set -o pipefail
+  echo -n "$secret"
 }
 
 # Generate cryptographically secure hex secret
 generate_secret_hex() {
   local bytes=${1:-32}
+  local secret
+  set +o pipefail
   if command -v openssl >/dev/null 2>&1; then
-    openssl rand -hex "$bytes" | tr -d '\n\r'
+    secret=$(openssl rand -hex "$bytes" | tr -d '\n\r')
   else
-    tr -dc 'a-f0-9' < /dev/urandom | head -c "$((bytes * 2))"
+    secret=$(tr -dc 'a-f0-9' < /dev/urandom | head -c "$((bytes * 2))")
   fi
+  set -o pipefail
+  echo -n "$secret"
 }
 
 # Generate secure random initial password
 generate_password() {
   local length=${1:-16}
-  # Exclude potentially problematic characters in env files like quotes and backslashes
-  tr -dc 'A-Za-z0-9!#%^*' < /dev/urandom | head -c "$length"
+  local pass
+  set +o pipefail
+  pass=$(tr -dc 'A-Za-z0-9!#%^*' < /dev/urandom | head -c "$length")
+  set -o pipefail
+  echo -n "$pass"
 }
 
 # Cleanup on exit trap

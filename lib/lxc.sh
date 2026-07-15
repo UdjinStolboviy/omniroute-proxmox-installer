@@ -69,11 +69,7 @@ prepare_lxc_template() {
 
   local template_filename=$(basename "$latest_debian_tmpl")
   
-  # PVE templates are stored under /var/lib/vz/template/cache/ or custom storage paths
   # Check if template is already downloaded in selected storage
-  local storage_path=$(pvesm path "$TEMPLATE_STORAGE" | cut -d':' -f2 | xargs)
-  # For dir type storages, it's storage_path/template/cache
-  # But the safest way to verify if it's there is running pveam list
   if pveam list "$TEMPLATE_STORAGE" | grep -q "$template_filename"; then
     msg_ok "Template $template_filename is already downloaded."
   else
