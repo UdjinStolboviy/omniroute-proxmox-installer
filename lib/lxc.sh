@@ -160,7 +160,7 @@ create_lxc_container() {
     -cores "$CPU_CORES" \
     -memory "$RAM_SIZE" \
     -swap 512 \
-    -disk "$SELECTED_STORAGE:$DISK_SIZE" \
+    -rootfs "$SELECTED_STORAGE:$DISK_SIZE" \
     -net0 "$NET_CONFIG" "${extra_opts[@]}" \
     -ostype debian \
     -hostname "$HOSTNAME" \
