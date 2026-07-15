@@ -1,0 +1,38 @@
+services:
+  redis:
+    image: docker.io/library/redis:7-alpine
+    container_name: omniroute-redis
+    restart: unless-stopped
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - ./redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  omniroute:
+    image: ghcr.io/diegosouzapw/omniroute:${OMNIROUTE_VERSION:-latest}
+    container_name: omniroute
+    restart: unless-stopped
+    stop_grace_period: 40s
+    env_file: omniroute.env
+    ports:
+      - "${DASHBOARD_PORT:-20128}:${DASHBOARD_PORT:-20128}"
+      - "${API_PORT:-20129}:${API_PORT:-20129}"
+      - "${LIVE_WS_PORT:-20132}:${LIVE_WS_PORT:-20132}"
+    environment:
+      - DATA_DIR=/app/data
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.mjs"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
