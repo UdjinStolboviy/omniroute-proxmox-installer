@@ -58,12 +58,12 @@ prepare_lxc_template() {
   msg_info "Updating Proxmox template database..."
   pveam update >/dev/null 2>&1 || true
 
-  # We use Debian 12 (bookworm) as standard for Docker installations
-  local search_pattern="debian-12-standard"
+  # We use Debian 13 (trixie) as standard for Docker installations
+  local search_pattern="debian-13-standard"
   local latest_debian_tmpl=$(pveam available | grep "$search_pattern" | sort -r | head -n 1 | awk '{print $2}')
 
   if [ -z "$latest_debian_tmpl" ]; then
-    msg_err "Could not find a Debian 12 standard template in PVE database."
+    msg_err "Could not find a Debian 13 standard template in PVE database."
     exit 1
   fi
 

@@ -1,8 +1,8 @@
 # OmniRoute Proxmox VE Helper Installer
 
-This repository contains a professional, interactive installer for deploying **OmniRoute** on **Proxmox VE (PVE) 8.x+** in the style of the popular *Proxmox VE Helper Scripts* (tteck-level).
+This repository contains a professional, interactive installer for deploying **OmniRoute** on **Proxmox VE (PVE) 9.x+** in the style of the popular *Proxmox VE Helper Scripts* (tteck-level).
 
-The installer fully automates the creation of a Debian 12 LXC container, configures the virtualization features (`nesting=1`, `keyctl=1`), installs Docker CE, and runs OmniRoute alongside a Redis instance for caching and rate-limiting.
+The installer fully automates the creation of a Debian 13 LXC container, configures the virtualization features (`nesting=1`, `keyctl=1`), installs Docker CE, and runs OmniRoute alongside a Redis instance for caching and rate-limiting.
 
 ---
 

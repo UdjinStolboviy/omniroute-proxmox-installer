@@ -24,8 +24,8 @@ validate_pve() {
     local pve_ver=$(pveversion | cut -d'/' -f2 | cut -d'-' -f1)
     msg_info "PVE Version: $pve_ver"
     local major_ver=$(echo "$pve_ver" | cut -d'.' -f1)
-    if (( major_ver < 8 )); then
-      msg_warn "This script is optimized for PVE 8+. You are running PVE $major_ver. Proceed at your own risk."
+    if (( major_ver < 9 )); then
+      msg_warn "This script is optimized for PVE 9+. You are running PVE $major_ver. Proceed at your own risk."
     fi
   else
     msg_warn "Could not determine PVE version via pveversion command."
