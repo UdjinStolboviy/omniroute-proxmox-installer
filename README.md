@@ -1,124 +1,139 @@
 # OmniRoute Proxmox VE Helper Installer
 
-Цей проєкт містить професійний інтерактивний інсталятор для розгортання **OmniRoute** на базі **Proxmox VE (PVE) 8.x+** у стилі відомих скриптів *Proxmox VE Helper Scripts* (рівня tteck).
+This repository contains a professional, interactive installer for deploying **OmniRoute** on **Proxmox VE (PVE) 8.x+** in the style of the popular *Proxmox VE Helper Scripts* (tteck-level).
 
-Інсталятор повністю автоматизує процес створення LXC-контейнера на Debian 12, налаштування систем віртуалізації (nesting, keyctl), встановлення Docker CE та запуску OmniRoute разом із Redis для кешування та лімітування запитів.
-
----
-
-## ⚡ Особливості
-- **Стиль Proxmox VE Helper Scripts:** Зручне інтерактивне меню з вибором режимів встановлення.
-- **Два профілі встановлення:**
-  - *Default Settings:* Автоматичне визначення наступного вільного ID контейнера, конфігурації CPU/RAM, автоматичний вибір сховища та DHCP.
-  - *Advanced Settings:* Ручне налаштування CTID, імені хоста, об'ємів RAM/CPU/диска, вибір сховища (ZFS, LVM-Thin, Directory, Ceph тощо) та налаштування статичної IP-адреси.
-- **Підтримка Docker CE:** Автоматичне налаштування офіційного репозиторію Docker, встановлення Docker Engine, CLI, Buildx та Compose всередині LXC.
-- **Автоматична генерація секретів:** Безпечна генерація унікальних значень для `JWT_SECRET`, `API_KEY_SECRET`, `STORAGE_ENCRYPTION_KEY` та первинного пароля адміністратора (`INITIAL_PASSWORD`).
-- **Модульна структура:** Скрипт розділений на окремі файли в директорії `lib/` для зручності підтримки та розвитку.
-- **Логування та перевірки:** Детальний лог встановлення зберігається у `/var/log/omniroute_install.log` на PVE хості.
+The installer fully automates the creation of a Debian 12 LXC container, configures the virtualization features (`nesting=1`, `keyctl=1`), installs Docker CE, and runs OmniRoute alongside a Redis instance for caching and rate-limiting.
 
 ---
 
-## 📂 Структура проєкту
+## ⚡ Features
+- **Proxmox VE Helper Scripts Style:** A clean interactive console menu for choosing installation profiles.
+- **Two Installation Modes:**
+  - *Default Settings (Recommended):* Auto-detects next free Container ID, assigns standard resources (2 vCPUs, 2GB RAM, 8GB Disk), auto-selects storage pool, and configures DHCP.
+  - *Advanced Settings:* Customizable CTID, hostname, resource allocations (RAM/CPU/Disk), target storage pool (ZFS, LVM-Thin, Directory, Ceph, etc.), and static IP configuration.
+- **Docker CE Integration:** Automates official Docker APT repository setup, installs Docker Engine, CLI, Buildx, and Docker Compose inside the LXC container.
+- **Automatic Secrets Generation:** Cryptographically generates unique secrets for `JWT_SECRET`, `API_KEY_SECRET`, `STORAGE_ENCRYPTION_KEY`, and a randomized initial admin password (`INITIAL_PASSWORD`).
+- **Strict Security Permissions:** Restricts access to host installer logs (`/var/log/omniroute_install.log`) and the container env file (`/opt/omniroute/omniroute.env`) with secure `600` permissions.
+- **Modular Structure:** Modular codebase split into files under `lib/` for easier maintainability.
+
+---
+
+## 📂 Project Structure
 
 ```
 omniroute-proxmox-installer/
-├── install.sh              ← Головний інсталятор (запуск на хості Proxmox)
-├── update.sh               ← Оновлення OmniRoute (запуск всередині LXC)
-├── uninstall.sh            ← Видалення (на хості — видаляє LXC, в контейнері — видаляє сервіси)
+├── install.sh              ← Main installer entrypoint (run on PVE host)
+├── update.sh               ← Updates OmniRoute (run inside LXC container)
+├── uninstall.sh            ← Uninstaller (deletes LXC on host, deletes services inside LXC)
 ├── lib/
-│   ├── ui.sh               ← Функції інтерфейсу, кольори та запити
-│   ├── validate.sh         ← Перевірка сумісності хоста PVE
-│   ├── storage.sh          ← Автовизначення та вибір сховищ
-│   ├── network.sh          ← Налаштування мережевих мостів, DHCP та Static IP
-│   ├── lxc.sh              ← Створення та запуск LXC-контейнерів
-│   ├── docker.sh           ← Встановлення Docker всередині контейнера
-│   ├── github.sh           ← Отримання останніх релізів OmniRoute
-│   └── functions.sh        ← Допоміжні утиліти (генератори секретів, логи)
+│   ├── ui.sh               ← UI functions, colors, and prompt choices
+│   ├── validate.sh         ← Host environment and PVE compatibility checks
+│   ├── storage.sh          ← Storage pool auto-detection and selection
+│   ├── network.sh          ← Network bridges, DHCP, and static IP setup
+│   ├── lxc.sh              ← LXC container lifecycle and creation
+│   ├── docker.sh           ← Docker installation script (runs inside LXC)
+│   ├── github.sh           ← OmniRoute release tag fetcher
+│   └── functions.sh        ← Shared helpers (secret generators, logging)
 └── configs/
-    ├── docker-compose.yml  ← Конфігурація сервісів OmniRoute та Redis
-    └── omniroute.env       ← Шаблон конфігураційного середовища
+    ├── docker-compose.yml  ← OmniRoute and Redis service compositions
+    └── omniroute.env       ← Configuration environment template
 ```
 
 ---
 
-## 🚀 Використання на віддаленому сервері Proxmox VE
+## 🚀 Step-by-Step Remote Proxmox VE Execution Guide
 
-Ви можете запустити встановлення на віддаленому сервері Proxmox двома основними способами: віддалено в один рядок або шляхом завантаження репозиторію.
+You can run the installer on a remote Proxmox server either via a direct HTTPS stream or by cloning the repository.
 
-### Варіант 1: Запуск однією командою через curl (Рекомендовано)
-Найпростіший спосіб. Підключіться до вашого сервера Proxmox VE через SSH та виконайте:
+### Step 1: Connect to Proxmox VE via SSH
+Open your terminal and connect to your remote Proxmox host as the `root` user:
+```bash
+ssh root@YOUR_PROXMOX_IP
+```
+*(Replace `YOUR_PROXMOX_IP` with the actual IP address of your Proxmox VE server).*
 
+---
+
+### Step 2: Open a Screen/Tmux Session (Highly Recommended)
+Network interruptions can abort the installation process halfway. Using `tmux` ensures that the script runs locally on the host even if you disconnect:
+```bash
+# Install and run tmux
+apt-get update && apt-get install -y tmux
+tmux
+```
+*If your SSH session drops, reconnect and run `tmux attach` to resume.*
+
+---
+
+### Step 3: Run the Installer Script
+Choose one of the two options below:
+
+#### Option A (One-liner Stream - Recommended):
+Run the installer directly from the GitHub repository:
 ```bash
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/UdjinStolboviy/omniroute-proxmox-installer/main/install.sh)"
 ```
 
-#### 🛡️ Безпечне віддалене підключення (Рекомендації):
-Якщо ваше інтернет-з'єднання нестабільне, або ви боїтеся переривання встановлення при втраті SSH-сесії, використовуйте термінальний мультиплексор `screen` або `tmux`:
-
-1. **Підключіться до PVE хоста:**
-   ```bash
-   ssh root@your-proxmox-ip
-   ```
-2. **Встановіть та запустіть tmux (якщо не встановлено):**
-   ```bash
-   apt-get update && apt-get install -y tmux
-   tmux
-   ```
-3. **Запустіть скрипт встановлення:**
-   ```bash
-   bash -c "$(curl -fsSL https://raw.githubusercontent.com/UdjinStolboviy/omniroute-proxmox-installer/main/install.sh)"
-   ```
-   *Тепер, навіть якщо ви відключитеся від SSH, процес продовжиться у фоні. Ви зможете повернутися до нього командою `tmux attach`.*
+#### Option B (Local Clone for Customization):
+Clone the repository and run the script locally if you wish to inspect or modify configuration templates:
+```bash
+git clone https://github.com/UdjinStolboviy/omniroute-proxmox-installer.git
+cd omniroute-proxmox-installer
+chmod +x install.sh
+./install.sh
+```
 
 ---
 
-### Варіант 2: Локальний запуск (Клонування репозиторію)
-Якщо ви бажаєте перевірити код перед запуском або змінити дефолтні файли конфігурації:
-
-1. **Підключіться до PVE хоста через SSH:**
-   ```bash
-   ssh root@your-proxmox-ip
-   ```
-2. **Клонуйте репозиторій та перейдіть у нього:**
-   ```bash
-   git clone https://github.com/UdjinStolboviy/omniroute-proxmox-installer.git
-   cd omniroute-proxmox-installer
-   ```
-3. **Зробіть скрипт виконуваним та запустіть:**
-   ```bash
-   chmod +x install.sh
-   ./install.sh
-   ```
+### Step 4: Interact with the Menu
+Once the installer launches, choose your installation mode:
+* Select **Default Settings** (type `1` and press `Enter`) for automatic installation.
+* Select **Advanced Settings** (type `2` and press `Enter`) to custom configure resources (RAM, CPU, storage, or static IP details).
 
 ---
 
-## ⚙️ Керування після встановлення
+### Step 5: First Login and Dashboard Access
+Once finished, the terminal will display the final summary:
+- **Web Dashboard:** `http://<LXC_IP>:20128`
+- **Initial Password:** Provided in the output summary.
+- **DB Encryption Key:** Provided in the output summary.
 
-### Оновлення OmniRoute
-Скрипт автоматично додає інструмент оновлення всередину LXC-контейнера. Для оновлення до останньої стабільної версії виконайте на PVE хості:
+> [!IMPORTANT]
+> **Required Security Action:**
+> Log in to the web panel at `http://<LXC_IP>:20128` using the initial password and **immediately change your password** in the admin profile settings.
+
+---
+
+### Step 6: Network Firewall (Optional Security)
+Since the container is created with the Proxmox firewall enabled (`firewall=1`), you can restrict traffic to the Dashboard port (`20128`) and API port (`20129`) directly via the Proxmox VE Web UI (Container -> Firewall -> Rules) to limit access to your trusted local subnets.
+
+---
+
+## ⚙️ Post-Install Management
+
+### Updating OmniRoute
+To update OmniRoute to the latest stable release, run this command on your Proxmox host:
 ```bash
 pct exec <CTID> -- /opt/omniroute/update.sh
 ```
-*(де `<CTID>` — це ID вашого контейнера, наприклад `100`)*
+*(Replace `<CTID>` with your Container ID, e.g. `100`).*
 
-Або увійдіть у консоль контейнера та виконайте:
+Alternatively, enter the container's shell and run:
 ```bash
 /opt/omniroute/update.sh
 ```
 
-### Видалення OmniRoute
-Ви можете видалити застосунок двома способами:
+### Uninstalling OmniRoute
+You can choose to delete either the entire LXC container or only the Docker services:
 
-1. **Повне видалення контейнера LXC (запуск на хості PVE):**
+1. **Delete the entire LXC container (run on Proxmox Host):**
    ```bash
-   /path/to/omniroute-proxmox-installer/uninstall.sh
-   # або якщо репозиторій не клоновано:
    bash -c "$(curl -fsSL https://raw.githubusercontent.com/UdjinStolboviy/omniroute-proxmox-installer/main/uninstall.sh)"
    ```
-   Скрипт запитає ID контейнера та повністю знищить його разом з усіма даними.
+   *The script will ask for the CTID and permanently destroy the container and all its stored data.*
 
-2. **Видалення тільки сервісів Docker (запуск всередині LXC):**
+2. **Remove only Docker services and files (run inside LXC Container):**
    ```bash
    /opt/omniroute/uninstall.sh
    ```
-   Це зупинить контейнери Docker, видалить їх та очистить папку `/opt/omniroute`, залишивши сам LXC-контейнер робочим.
+   *This stops and deletes the Docker containers, networks, volumes, and files under `/opt/omniroute`, leaving the base OS intact.*

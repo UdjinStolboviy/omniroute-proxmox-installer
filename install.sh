@@ -114,6 +114,8 @@ sed -e "s|__JWT_SECRET__|${JWT_SECRET}|g" \
     -e "s|__INITIAL_PASSWORD__|${INITIAL_PASSWORD}|g" \
     -e "s|__LXC_ORIGIN__|${LXC_ORIGIN}|g" \
     "$CONFIG_DIR/omniroute.env" | pct exec "$CTID" -- tee /opt/omniroute/omniroute.env >/dev/null
+pct exec "$CTID" -- chmod 600 /opt/omniroute/omniroute.env
+
 
 # 7. Run Docker installation inside container
 msg_status "Installing Docker and dependencies inside the container..."
