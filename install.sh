@@ -101,7 +101,7 @@ INITIAL_PASSWORD=$(generate_password 16)
 
 # 6. Copy files to LXC Container
 msg_status "Configuring OmniRoute environment files..."
-pct exec "$CTID" -- mkdir -p /opt/omniroute
+pct exec "$CTID" -- mkdir -p /opt/omniroute/data
 
 # Read compose file and push it
 cat "$CONFIG_DIR/docker-compose.yml" | pct exec "$CTID" -- tee /opt/omniroute/docker-compose.yml >/dev/null
@@ -115,6 +115,15 @@ sed -e "s|__JWT_SECRET__|${JWT_SECRET}|g" \
       -e "s|__LXC_ORIGIN__|${LXC_ORIGIN}|g" \
       "$CONFIG_DIR/.env" | pct exec "$CTID" -- tee /opt/omniroute/.env >/dev/null
 pct exec "$CTID" -- chmod 600 /opt/omniroute/.env
+
+# Pre-generate server.env with secrets to prevent Zero-Config Mode and key mismatch
+pct exec "$CTID" -- bash -c "cat <<EOF > /opt/omniroute/data/server.env
+JWT_SECRET=${JWT_SECRET}
+API_KEY_SECRET=${API_KEY_SECRET}
+STORAGE_ENCRYPTION_KEY=${STORAGE_ENCRYPTION_KEY}
+INITIAL_PASSWORD=${INITIAL_PASSWORD}
+EOF"
+pct exec "$CTID" -- chmod 600 /opt/omniroute/data/server.env
 
 
 # 7. Run Docker installation inside container

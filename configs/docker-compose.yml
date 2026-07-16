@@ -17,16 +17,19 @@ services:
     container_name: omniroute
     restart: unless-stopped
     stop_grace_period: 40s
-    env_file: .env
+    env_file:
+      - .env
     ports:
       - "${DASHBOARD_PORT:-20128}:${DASHBOARD_PORT:-20128}"
       - "${API_PORT:-20129}:${API_PORT:-20129}"
       - "${LIVE_WS_PORT:-20132}:${LIVE_WS_PORT:-20132}"
     environment:
-      - DATA_DIR=/app/data
+      - DATA_DIR=/data
       - REDIS_URL=redis://redis:6379
+      - HOME=/data
+      - XDG_CONFIG_HOME=/data
     volumes:
-      - ./data:/app/data
+      - ./data:/data
     depends_on:
       redis:
         condition: service_healthy
