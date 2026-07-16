@@ -93,18 +93,11 @@ prepare_lxc_template
 create_lxc_container # sets LXC_IP
 
 # 5. Generate secure environment secrets
-if [ "$INSTALL_MODE" -eq 1 ]; then
-  msg_status "Generating security tokens and environment parameters..."
-  JWT_SECRET=$(generate_secret_base64 48)
-  API_KEY_SECRET=$(generate_secret_hex 32)
-  STORAGE_ENCRYPTION_KEY=$(generate_secret_hex 32)
-  INITIAL_PASSWORD=$(generate_password 16)
-else
-  JWT_SECRET=""
-  API_KEY_SECRET=""
-  STORAGE_ENCRYPTION_KEY=""
-  INITIAL_PASSWORD=""
-fi
+msg_status "Generating security tokens and environment parameters..."
+JWT_SECRET=$(generate_secret_base64 48)
+API_KEY_SECRET=$(generate_secret_hex 32)
+STORAGE_ENCRYPTION_KEY=$(generate_secret_hex 32)
+INITIAL_PASSWORD=$(generate_password 16)
 
 # 6. Copy files to LXC Container
 msg_status "Configuring OmniRoute environment files..."
@@ -115,22 +108,12 @@ cat "$CONFIG_DIR/docker-compose.yml" | pct exec "$CTID" -- tee /opt/omniroute/do
 
 # Format omniroute.env template and push it
 LXC_ORIGIN="http://${LXC_IP}:20128"
-if [ "$INSTALL_MODE" -eq 1 ]; then
-  sed -e "s|__JWT_SECRET__|${JWT_SECRET}|g" \
+sed -e "s|__JWT_SECRET__|${JWT_SECRET}|g" \
       -e "s|__API_KEY_SECRET__|${API_KEY_SECRET}|g" \
       -e "s|__STORAGE_ENCRYPTION_KEY__|${STORAGE_ENCRYPTION_KEY}|g" \
       -e "s|__INITIAL_PASSWORD__|${INITIAL_PASSWORD}|g" \
       -e "s|__LXC_ORIGIN__|${LXC_ORIGIN}|g" \
       "$CONFIG_DIR/omniroute.env" | pct exec "$CTID" -- tee /opt/omniroute/omniroute.env >/dev/null
-else
-  # Comment out keys to trigger zero-config mode
-  sed -e "s|^JWT_SECRET=.*|# JWT_SECRET=|g" \
-      -e "s|^API_KEY_SECRET=.*|# API_KEY_SECRET=|g" \
-      -e "s|^STORAGE_ENCRYPTION_KEY=.*|# STORAGE_ENCRYPTION_KEY=|g" \
-      -e "s|^INITIAL_PASSWORD=.*|# INITIAL_PASSWORD=|g" \
-      -e "s|__LXC_ORIGIN__|${LXC_ORIGIN}|g" \
-      "$CONFIG_DIR/omniroute.env" | pct exec "$CTID" -- tee /opt/omniroute/omniroute.env >/dev/null
-fi
 pct exec "$CTID" -- chmod 600 /opt/omniroute/omniroute.env
 
 
@@ -158,19 +141,9 @@ echo -e "====================================================="
 echo -e "  Container ID:   ${BOLD}${CTID}${NC}"
 echo -e "  IP Address:     ${BOLD}${LXC_IP}${NC}"
 echo -e "  Web Dashboard:  ${BLUE}${BOLD}http://${LXC_IP}:20128${NC}"
-if [ "$INSTALL_MODE" -eq 0 ]; then
-  echo -e "  Configuration:  ${YELLOW}${BOLD}Zero-Config Mode${NC}"
-  echo -e "  -----------------------------------------------------"
-  echo -e "  Running in zero-config mode"
-  echo -e "  OmniRoute auto-generated secure encryption keys on first launch."
-  echo -e "  They are persisted to ~/.omniroute/server.env."
-  echo -e "  No action is required — your data is encrypted and safe."
-  echo -e "  To use custom keys, add JWT_SECRET and STORAGE_ENCRYPTION_KEY to that file."
-else
-  echo -e "  Initial Admin Passwords/Tokens:"
-  echo -e "    * Admin Password:      ${YELLOW}${BOLD}${INITIAL_PASSWORD}${NC}"
-  echo -e "    * DB Encryption Key:   ${CYAN}${STORAGE_ENCRYPTION_KEY}${NC}"
-fi
+echo -e "  Initial Admin Passwords/Tokens:"
+echo -e "    * Admin Password:      ${YELLOW}${BOLD}${INITIAL_PASSWORD}${NC}"
+echo -e "    * DB Encryption Key:   ${CYAN}${STORAGE_ENCRYPTION_KEY}${NC}"
 echo -e "====================================================="
 echo -e "  To manage the container locally:"
 echo -e "    - Update:      pct exec $CTID -- /opt/omniroute/update.sh"
