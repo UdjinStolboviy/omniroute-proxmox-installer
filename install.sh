@@ -124,6 +124,7 @@ STORAGE_ENCRYPTION_KEY=${STORAGE_ENCRYPTION_KEY}
 INITIAL_PASSWORD=${INITIAL_PASSWORD}
 EOF"
 pct exec "$CTID" -- chmod 600 /opt/omniroute/data/server.env
+pct exec "$CTID" -- chown -R 1000:1000 /opt/omniroute/data
 
 
 # 7. Run Docker installation inside container
