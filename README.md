@@ -13,7 +13,7 @@ The installer fully automates the creation of a Debian 13 LXC container, configu
   - *Advanced Settings:* Customizable CTID, hostname, resource allocations (RAM/CPU/Disk), target storage pool (ZFS, LVM-Thin, Directory, Ceph, etc.), and static IP configuration.
 - **Docker CE Integration:** Automates official Docker APT repository setup, installs Docker Engine, CLI, Buildx, and Docker Compose inside the LXC container.
 - **Automatic Secrets Generation:** Cryptographically generates unique secrets for `JWT_SECRET`, `API_KEY_SECRET`, `STORAGE_ENCRYPTION_KEY`, and a randomized initial admin password (`INITIAL_PASSWORD`).
-- **Strict Security Permissions:** Restricts access to host installer logs (`/var/log/omniroute_install.log`) and the container env file (`/opt/omniroute/omniroute.env`) with secure `600` permissions.
+- **Strict Security Permissions:** Restricts access to host installer logs (`/var/log/omniroute_install.log`) and the container env file (`/opt/omniroute/.env`) with secure `600` permissions.
 - **Modular Structure:** Modular codebase split into files under `lib/` for easier maintainability.
 
 ---
@@ -36,7 +36,7 @@ omniroute-proxmox-installer/
 │   └── functions.sh        ← Shared helpers (secret generators, logging)
 └── configs/
     ├── docker-compose.yml  ← OmniRoute and Redis service compositions
-    └── omniroute.env       ← Configuration environment template
+    └── .env                ← Configuration environment template
 ```
 
 ---

@@ -27,7 +27,7 @@ else
   for lib in ui.sh validate.sh storage.sh network.sh lxc.sh docker.sh github.sh functions.sh; do
     curl -fsSL "$REPO_URL/lib/$lib" -o "$LIB_DIR/$lib"
   done
-  for conf in docker-compose.yml omniroute.env; do
+  for conf in docker-compose.yml .env; do
     curl -fsSL "$REPO_URL/configs/$conf" -o "$CONFIG_DIR/$conf"
   done
   for cmd in update.sh uninstall.sh; do
@@ -106,15 +106,15 @@ pct exec "$CTID" -- mkdir -p /opt/omniroute
 # Read compose file and push it
 cat "$CONFIG_DIR/docker-compose.yml" | pct exec "$CTID" -- tee /opt/omniroute/docker-compose.yml >/dev/null
 
-# Format omniroute.env template and push it
+# Format .env template and push it
 LXC_ORIGIN="http://${LXC_IP}:20128"
 sed -e "s|__JWT_SECRET__|${JWT_SECRET}|g" \
       -e "s|__API_KEY_SECRET__|${API_KEY_SECRET}|g" \
       -e "s|__STORAGE_ENCRYPTION_KEY__|${STORAGE_ENCRYPTION_KEY}|g" \
       -e "s|__INITIAL_PASSWORD__|${INITIAL_PASSWORD}|g" \
       -e "s|__LXC_ORIGIN__|${LXC_ORIGIN}|g" \
-      "$CONFIG_DIR/omniroute.env" | pct exec "$CTID" -- tee /opt/omniroute/omniroute.env >/dev/null
-pct exec "$CTID" -- chmod 600 /opt/omniroute/omniroute.env
+      "$CONFIG_DIR/.env" | pct exec "$CTID" -- tee /opt/omniroute/.env >/dev/null
+pct exec "$CTID" -- chmod 600 /opt/omniroute/.env
 
 
 # 7. Run Docker installation inside container

@@ -17,7 +17,7 @@ services:
     container_name: omniroute
     restart: unless-stopped
     stop_grace_period: 40s
-    env_file: omniroute.env
+    env_file: .env
     ports:
       - "${DASHBOARD_PORT:-20128}:${DASHBOARD_PORT:-20128}"
       - "${API_PORT:-20129}:${API_PORT:-20129}"
