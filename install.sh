@@ -74,10 +74,8 @@ if [ "$INSTALL_MODE" -eq 0 ]; then
   # Auto-detect storage pool
   detect_storages # sets SELECTED_STORAGE and STORAGE_TYPE
   
-  # Auto-detect network bridge (vmbr0 usually)
-  detect_bridges # sets SELECTED_BRIDGE
-  NET_CONFIG="name=eth0,bridge=$SELECTED_BRIDGE,ip=dhcp,firewall=1"
-  GATEWAY_CONFIG=""
+  # Configure static network settings
+  configure_network
   
   msg_ok "Configured with CTID: $CTID, Hostname: $HOSTNAME, CPU Cores: 2, RAM: 2GB, Disk: 8GB"
 else
