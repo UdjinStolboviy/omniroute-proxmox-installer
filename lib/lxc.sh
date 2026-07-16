@@ -146,9 +146,9 @@ prompt_lxc_settings() {
 create_lxc_container() {
   msg_status "Creating LXC container $CTID ($HOSTNAME)..."
   
-  local extra_opts=()
+  local net0_val="$NET_CONFIG"
   if [ -n "$GATEWAY_CONFIG" ]; then
-    extra_opts+=("-$GATEWAY_CONFIG")
+    net0_val="${net0_val},${GATEWAY_CONFIG}"
   fi
 
   # Run pct create
@@ -157,7 +157,7 @@ create_lxc_container() {
     -memory "$RAM_SIZE" \
     -swap 512 \
     -rootfs "$SELECTED_STORAGE:$DISK_SIZE" \
-    -net0 "$NET_CONFIG" "${extra_opts[@]}" \
+    -net0 "$net0_val" \
     -ostype debian \
     -hostname "$HOSTNAME" \
     -unprivileged "$UNPRIVILEGED" \
