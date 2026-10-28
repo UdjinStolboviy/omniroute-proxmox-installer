@@ -112,11 +112,17 @@ Since the container is created with the Proxmox firewall enabled (`firewall=1`),
 ## ⚙️ Post-Install Management
 
 ### Updating OmniRoute
-To update OmniRoute to the latest stable release, run this command on your Proxmox host:
+To update OmniRoute to the latest stable release, run this command on your Proxmox host (this also ensures you have the latest update script):
+```bash
+pct exec <CTID> -- bash -c "curl -fsSL https://raw.githubusercontent.com/UdjinStolboviy/omniroute-proxmox-installer/main/update.sh -o /opt/omniroute/update.sh && chmod +x /opt/omniroute/update.sh && /opt/omniroute/update.sh"
+```
+*(Replace `<CTID>` with your Container ID, e.g. `100`).*
+
+If the update script is already installed inside your container, you can simply run:
 ```bash
 pct exec <CTID> -- /opt/omniroute/update.sh
 ```
-*(Replace `<CTID>` with your Container ID, e.g. `100`).*
+*(You can also pass a specific version or `latest`, e.g. `pct exec <CTID> -- /opt/omniroute/update.sh 3.8.52`).*
 
 Alternatively, enter the container's shell and run:
 ```bash
