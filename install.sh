@@ -111,6 +111,7 @@ sed -e "s|__JWT_SECRET__|${JWT_SECRET}|g" \
       -e "s|__STORAGE_ENCRYPTION_KEY__|${STORAGE_ENCRYPTION_KEY}|g" \
       -e "s|__INITIAL_PASSWORD__|${INITIAL_PASSWORD}|g" \
       -e "s|__LXC_ORIGIN__|${LXC_ORIGIN}|g" \
+      -e "s|__OMNIROUTE_VERSION__|${OMNIROUTE_VERSION}|g" \
       "$CONFIG_DIR/.env" | pct exec "$CTID" -- tee /opt/omniroute/.env >/dev/null
 pct exec "$CTID" -- chmod 600 /opt/omniroute/.env
 
